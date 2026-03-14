@@ -1,0 +1,28 @@
+### Python ###
+__pycache__/
+*.py[cod]
+*$py.class
+.dist/
+.venv/
+venv/
+ENV/
+
+### Base de Dados e Configurações ###
+# Ignora a pasta database para não subir dados sensíveis ou locais
+database/
+*.db
+*.sqlite
+*.sqlite3
+
+### Recibos e Assets Temporários ###
+# Como tens uma pasta 'recibos', convém ignorar os PDFs gerados
+recibos/*.pdf
+recibos/
+
+### UI e Outros ###
+# Se usares ficheiros de configuração de temas ou specs locais
+*.spec
+
+### IDEs ###
+.vscode/
+.idea/
