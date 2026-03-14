@@ -5,6 +5,8 @@ from PySide6.QtWidgets import (
     QHBoxLayout, QMessageBox
 )
 
+# Importamos as variáveis de personalização do seu novo arquivo de configuração
+from config import NOME_LOJA, SLOGAN_LOJA
 from services.auth_service import authenticate, Usuario
 from ui.main_window import MainWindow
 
@@ -12,19 +14,22 @@ from ui.main_window import MainWindow
 class LoginDialog(QDialog):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("AngelaStore - Login")
+        # 1. Título da Janela dinâmico
+        self.setWindowTitle(f"{NOME_LOJA} - Login")
         self.setFixedSize(420, 260)
 
         self.user: Usuario | None = None
-        self.main_window: MainWindow | None = None  # <-- IMPORTANTE
+        self.main_window: MainWindow | None = None 
 
         layout = QVBoxLayout(self)
         layout.setSpacing(12)
 
-        title = QLabel("AngelaStore")
+        # 2. Título visual dinâmico
+        title = QLabel(NOME_LOJA)
         title.setObjectName("Title")
 
-        subtitle = QLabel("Entre com seu usuário e senha")
+        # 3. Subtítulo usando o slogan ou texto de instrução
+        subtitle = QLabel(SLOGAN_LOJA if SLOGAN_LOJA else "Entre com seu usuário e senha")
         subtitle.setStyleSheet("opacity: 0.8;")
 
         self.ed_user = QLineEdit()
@@ -70,5 +75,4 @@ class LoginDialog(QDialog):
         self.main_window = MainWindow(usuario_id=user.id, username=user.username, nome=user.nome, is_admin=user.is_admin)
         self.main_window.show()
 
-        # fecha o login
         self.accept()

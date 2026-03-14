@@ -3,8 +3,9 @@ from pathlib import Path
 from typing import Any
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import mm
+from config import NOME_LOJA, VERSAO_SISTEMA
 
-APP_NAME = nomeLoja
+APP_NAME = NOME_LOJA
 
 def _money(v: float) -> str:
     try:

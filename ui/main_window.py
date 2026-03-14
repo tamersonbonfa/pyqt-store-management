@@ -6,6 +6,8 @@ from PySide6.QtWidgets import (
     QPushButton, QLabel, QStackedWidget
 )
 
+# Importamos as configurações globais
+from config import NOME_LOJA, VERSAO_SISTEMA
 from services.config_service import get_config, set_config
 from ui.themes import qss_light, qss_dark
 
@@ -24,7 +26,8 @@ class MainWindow(QMainWindow):
         self.nome = nome
         self.is_admin = is_admin
 
-        self.setWindowTitle("AngelaStore - Sistema de Estoque e Vendas")
+        # 1. Configurações da Janela
+        self.setWindowTitle(f"{NOME_LOJA} - v{VERSAO_SISTEMA}")
         self.resize(1200, 720)
 
         self.central = QWidget()
@@ -34,22 +37,21 @@ class MainWindow(QMainWindow):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
-        # --- SIDEBAR (Barra Lateral) ---
+        # --- SIDEBAR ---
         self.sidebar = QWidget()
         self.sidebar.setObjectName("Sidebar")
         sb = QVBoxLayout(self.sidebar)
         sb.setContentsMargins(14, 14, 14, 14)
         sb.setSpacing(10)
 
-        logo = QLabel("AngelaStore")
+        logo = QLabel(NOME_LOJA)
         logo.setStyleSheet("font-size: 20px; font-weight: 900; margin-bottom: 5px;")
         sb.addWidget(logo)
 
-        user_info = QLabel(f"Usuário: {self.nome}")
+        user_info = QLabel(f"👤 {self.nome}")
         user_info.setStyleSheet("opacity: 0.85; font-size: 12px; margin-bottom: 10px;")
         sb.addWidget(user_info)
 
-        # Botões de Navegação Comuns
         self.btn_vendas = QPushButton("🧾 Frente de Vendas")
         self.btn_produtos = QPushButton("📦 Produtos / Estoque")
         self.btn_clientes = QPushButton("👤 Clientes")
@@ -58,7 +60,6 @@ class MainWindow(QMainWindow):
         sb.addWidget(self.btn_produtos)
         sb.addWidget(self.btn_clientes)
 
-        # Botões Exclusivos para Admin
         if self.is_admin:
             sb.addSpacing(10)
             line = QWidget()
@@ -66,19 +67,17 @@ class MainWindow(QMainWindow):
             line.setStyleSheet("background-color: rgba(255,255,255,0.1);")
             sb.addWidget(line)
             sb.addSpacing(5)
-
             self.btn_relatorios = QPushButton("📊 Relatórios Gerenciais")
             self.btn_usuarios = QPushButton("🔑 Gestão de Usuários")
             sb.addWidget(self.btn_relatorios)
             sb.addWidget(self.btn_usuarios)
 
-        # Botão de Tema no rodapé da Sidebar
         self.btn_tema = QPushButton("🌙 Tema: Escuro")
         self.btn_tema.setObjectName("Primary")
         sb.addStretch(1)
         sb.addWidget(self.btn_tema)
 
-        # --- ÁREA DE CONTEÚDO (QStackedWidget) ---
+        # --- ÁREA DE CONTEÚDO ---
         self.stack = QStackedWidget()
         
         # Inicializando as Telas
@@ -86,22 +85,23 @@ class MainWindow(QMainWindow):
         self.tela_produtos = TelaProdutos(usuario_id=self.usuario_id)
         self.tela_clientes = TelaClientes()
         
-        # Adicionando telas ao Stack
         self.stack.addWidget(self.tela_vendas)   # Index 0
         self.stack.addWidget(self.tela_produtos) # Index 1
         self.stack.addWidget(self.tela_clientes) # Index 2
 
-        # Adicionando telas de Admin ao Stack
         if self.is_admin:
             self.tela_relatorios = TelaRelatorios()
             self.tela_usuarios = TelaUsuarios()
             self.stack.addWidget(self.tela_relatorios) # Index 3
             self.stack.addWidget(self.tela_usuarios)   # Index 4
 
+        # ✅ CONEXÃO DO SINAL (Depois de criar as telas e o stack)
+        self.stack.currentChanged.connect(self.atualizar_tela_ativa)
+
         root.addWidget(self.sidebar)
         root.addWidget(self.stack, 1)
 
-        # --- EVENTOS (Cliques dos Botões) ---
+        # --- EVENTOS ---
         self.btn_vendas.clicked.connect(lambda: self.stack.setCurrentWidget(self.tela_vendas))
         self.btn_produtos.clicked.connect(lambda: self.stack.setCurrentWidget(self.tela_produtos))
         self.btn_clientes.clicked.connect(lambda: self.stack.setCurrentWidget(self.tela_clientes))
@@ -111,9 +111,19 @@ class MainWindow(QMainWindow):
             self.btn_usuarios.clicked.connect(lambda: self.stack.setCurrentWidget(self.tela_usuarios))
 
         self.btn_tema.clicked.connect(self.toggle_theme)
-
-        # Aplicar Tema Inicial Salvo
         self.apply_theme(get_config("theme", "dark"))
+
+    # ⚠️ A FUNÇÃO DEVE FICAR AQUI, FORA DO __INIT__
+    def atualizar_tela_ativa(self):
+        tela_atual = self.stack.currentWidget()
+        
+        # Tenta primeiro 'atualizar', se não existir, tenta 'carregar'
+        if hasattr(tela_atual, "atualizar"):
+            tela_atual.atualizar()
+        elif hasattr(tela_atual, "carregar"):
+            tela_atual.carregar()
+        elif hasattr(tela_atual, "load_data"):
+            tela_atual.load_data()
 
     def apply_theme(self, theme: str):
         theme = (theme or "dark").lower()
