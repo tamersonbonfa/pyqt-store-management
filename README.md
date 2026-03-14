@@ -93,7 +93,7 @@ pip install -r requirements.txt
 
 <details>
 <summary>🧪 <strong>Ferramentas de Desenvolvimento</strong></summary>
- 
+<br>
 O projeto inclui o script utilitário injetor_dados.py para testes de estresse:
 
 Simulação Realista: Gera movimentações de estoque e vendas fictícias.
