@@ -41,7 +41,7 @@
 ├── 🎨 assets/      # Ícones, logotipos e recursos visuais
 └── 🚀 main.py      # Ponto de entrada da aplicação
 
-```bash
+```
 
 </details>
 
@@ -49,15 +49,17 @@
 <summary>⚙️ <strong>Configuração e Instalação</strong></summary>
 
 1. Clonar o Repositório
-Bash
-
+```bash
 git clone [https://github.com/tamersonbonfa/pyqt-store-management.git](https://github.com/tamersonbonfa/pyqt-store-management.git)
 cd pyqt-store-management
+```
+
 2. Configurar Ambiente Virtual
-Bash
+```bash
 
 python -m venv .venv
 
+```
 # Ativação Windows:
 .venv\Scripts\activate
 
