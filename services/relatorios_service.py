@@ -1,51 +1,61 @@
 from __future__ import annotations
+import sqlite3 # Importação necessária para o Row
 from typing import Any
-from database.db import get_connection # Ou use o seu db_manager
+from database.db import get_connection
 
 class RelatoriosService:
+    
     @staticmethod
     def resumo_detalhado(inicio: str, fim: str) -> dict[str, Any]:
-        """Busca métricas financeiras, ranking de produtos e alertas de estoque."""
+        inicio_full = f"{inicio} 00:00:00"
+        fim_full = f"{fim} 23:59:59"
+
         with get_connection() as conn:
-            # 1. Resumo Financeiro do Período
+            conn.row_factory = sqlite3.Row
+            
+            # 1. FINANCEIRO: Soma direto das movimentações de SAÍDA (garante que bata com o histórico)
             financeiro = conn.execute("""
                 SELECT 
-                    COUNT(id) as total_vendas,
-                    SUM(total) as faturamento,
-                    CASE WHEN COUNT(id) > 0 THEN SUM(total) / COUNT(id) ELSE 0 END as ticket_medio
-                FROM vendas 
-                WHERE date(data) BETWEEN date(?) AND date(?)
-            """, (inicio, fim)).fetchone()
+                    COUNT(DISTINCT venda_id) as total_vendas,
+                    COALESCE(SUM(valor_venda), 0) as faturamento,
+                    CASE 
+                        WHEN COUNT(DISTINCT venda_id) > 0 
+                        THEN SUM(valor_venda) / COUNT(DISTINCT venda_id) 
+                        ELSE 0 
+                    END as ticket_medio
+                FROM movimentacoes_estoque 
+                WHERE tipo = 'SAIDA' AND data BETWEEN ? AND ?
+            """, (inicio_full, fim_full)).fetchone()
             
-            # 2. Vendas por Forma de Pagamento
+            # 2. MEIOS DE PAGAMENTO (Continua vindo da tabela vendas)
             pagamentos = conn.execute("""
                 SELECT forma_pagamento, SUM(total) as total
                 FROM vendas
-                WHERE date(data) BETWEEN date(?) AND date(?)
+                WHERE data BETWEEN ? AND ?
                 GROUP BY forma_pagamento
-            """, (inicio, fim)).fetchall()
+            """, (inicio_full, fim_full)).fetchall()
 
-            # 3. Ranking de Produtos Detalhado
+            # 3. DETALHAMENTO: Pega direto da MOVIMENTAÇÃO
+            # Aqui não tem erro: se saiu no estoque, aparece aqui.
             produtos = conn.execute("""
                 SELECT 
                     p.nome, 
-                    p.tamanho,
-                    p.unidade,
+                    m.tamanho,
+                    m.unidade,
                     p.custo as preco_compra,
                     p.preco_venda,
-                    SUM(i.quantidade) as qtd_vendida, 
-                    SUM(i.subtotal) as total_faturado,
-                    SUM( (i.preco_unitario * i.quantidade) * (i.desconto / 100.0) ) as desconto_total_reais,
-                    (SUM(i.subtotal) - SUM(i.quantidade * p.custo)) as lucro_estimado
-                FROM venda_itens i
-                JOIN produtos p ON p.id = i.produto_id
-                JOIN vendas v ON v.id = i.venda_id
-                WHERE date(v.data) BETWEEN date(?) AND date(?)
-                GROUP BY p.id 
+                    CAST(SUM(m.quantidade) AS INTEGER) as qtd_vendida, 
+                    SUM(m.valor_venda) as total_faturado,
+                    0 as desconto_total_reais, -- Ajuste se você salvar desconto na movimentação
+                    (SUM(m.valor_venda) - SUM(m.quantidade * p.custo)) as lucro_estimado
+                FROM movimentacoes_estoque m
+                JOIN produtos p ON p.id = m.produto_id
+                WHERE m.tipo = 'SAIDA' AND m.data BETWEEN ? AND ?
+                GROUP BY p.id, p.nome, m.tamanho, m.unidade
                 ORDER BY total_faturado DESC
-            """, (inicio, fim)).fetchall()
+            """, (inicio_full, fim_full)).fetchall()
 
-            # 4. Alerta de Estoque Crítico
+            # 4. ESTOQUE CRÍTICO
             estoque_baixo = conn.execute("""
                 SELECT nome, quantidade, estoque_minimo 
                 FROM produtos 
@@ -54,7 +64,9 @@ class RelatoriosService:
             """).fetchall()
 
             return {
-                "financeiro": dict(financeiro) if financeiro and financeiro["total_vendas"] else None,
+                "financeiro": dict(financeiro) if financeiro and financeiro["total_vendas"] > 0 else {
+                    "total_vendas": 0, "faturamento": 0.0, "ticket_medio": 0.0
+                },
                 "pagamentos": [dict(r) for r in pagamentos],
                 "produtos": [dict(r) for r in produtos],
                 "estoque_baixo": [dict(r) for r in estoque_baixo]
@@ -62,30 +74,23 @@ class RelatoriosService:
     
     @staticmethod
     def obter_relatorio_movimentacoes() -> list[dict]:
-            """
-            Retorna os dados usando a função que já funciona na sua interface principal.
-            Isso garante que usaremos a tabela correta.
-            """
-            try:
-                # Importamos a função que você já usa para preencher o "Histórico: Geral"
-                from services.produtos_service import listar_movimentacoes
-                
-                # Chamamos ela pedindo um limite maior para o relatório
-                dados = listar_movimentacoes(limite=2000)
-                
-                # Como a sua tabela de relatório pede nomes de colunas específicos, 
-                # garantimos a compatibilidade aqui:
-                formatados = []
-                for d in dados:
-                    formatados.append({
-                        "data": d.get("data"),
-                        "tipo": d.get("tipo"),
-                        "produto": d.get("produto_nome"), # Pegando o nome do produto que já vem do JOIN
-                        "quantidade": d.get("quantidade"),
-                        "observacao": d.get("observacao"),
-                        "usuario": d.get("usuario_nome")  # Pegando o nome do usuário
-                    })
-                return formatados
-            except Exception as e:
-                print(f"Erro ao carregar dados do service existente: {e}")
-                return []
+        """Retorna os dados usando a função que já funciona na sua interface principal."""
+        try:
+            from services.produtos_service import listar_movimentacoes
+            
+            dados = listar_movimentacoes(limite=2000)
+            
+            formatados = []
+            for d in dados:
+                formatados.append({
+                    "data": d.get("data"),
+                    "tipo": d.get("tipo"),
+                    "produto": d.get("produto_nome"),
+                    "quantidade": d.get("quantidade"),
+                    "observacao": d.get("observacao"),
+                    "usuario": d.get("usuario_nome")
+                })
+            return formatados
+        except Exception as e:
+            print(f"Erro ao carregar dados do service existente: {e}")
+            return []

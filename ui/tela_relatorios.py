@@ -87,12 +87,27 @@ class TelaRelatorios(QWidget):
 
     def carregar_dados(self, periodo):
         hoje = QDate.currentDate()
-        inicio = hoje.toString("yyyy-MM-dd")
-        if periodo == "semana": inicio = hoje.addDays(-7).toString("yyyy-MM-dd")
-        elif periodo == "mes": inicio = hoje.toString("yyyy-MM-01")
-        elif periodo == "ano": inicio = hoje.toString("yyyy-01-01")
+        # O fim deve ser sempre hoje para os filtros rápidos
+        fim_str = hoje.toString("yyyy-MM-dd")
+        
+        # Define o início baseado no botão clicado
+        if periodo == "hoje":
+            inicio_str = hoje.toString("yyyy-MM-dd")
+        elif periodo == "semana":
+            # Pega os últimos 7 dias
+            inicio_str = hoje.addDays(-7).toString("yyyy-MM-dd")
+        elif periodo == "mes":
+            # Primeiro dia do mês atual
+            inicio_str = hoje.toString("yyyy-MM-01")
+        elif periodo == "ano":
+            # Primeiro dia do ano atual
+            inicio_str = hoje.toString("yyyy-01-01")
+        else:
+            inicio_str = hoje.toString("yyyy-MM-01")
 
-        dados = self.service.resumo_detalhado(inicio, hoje.toString("yyyy-MM-dd"))
+        # Chama o service passando o intervalo corrigido
+        # É vital que o service adicione " 00:00:00" e " 23:59:59" no SQL
+        dados = self.service.resumo_detalhado(inicio_str, fim_str)
         self.atualizar_interface(dados)
 
     def atualizar_interface(self, dados):

@@ -66,7 +66,7 @@ class RelatorioMovimentacoesDialog(QDialog):
         
         self.cb_filtro_categoria = QComboBox()
         self.cb_filtro_categoria.addItem("Todas as Categorias")
-        self.cb_filtro_categoria.addItems(["Body Splash", "Condicionador", "Desodorante", "Máscara", "Perfume", "Sabonete", "Shampo", "Outro"])
+        self.cb_filtro_categoria.addItems(["Body Splash", "Condicionador", "Desodorante", "Máscara", "Perfume", "Sabonete", "Shampo", "Outros"])
         
         self.cb_filtro_usuario = QComboBox()
         self.cb_filtro_usuario.addItem("Todos os Usuários")
@@ -144,7 +144,7 @@ class RelatorioMovimentacoesDialog(QDialog):
 
         for d in self.dados_brutos:
             # 1. Filtro de Categoria (Note: sua listar_movimentacoes precisa retornar 'categoria' no dicionário)
-            cat_doc = d.get("categoria") or "Outro"
+            cat_doc = d.get("categoria") or "Outros"
             if categoria_alvo != "Todas as Categorias" and cat_doc != categoria_alvo:
                 continue
                 
@@ -180,7 +180,7 @@ class RelatorioMovimentacoesDialog(QDialog):
                 str(m.get("data") or ""),
                 tipo,
                 str(m.get("produto_nome") or ""),
-                str(m.get("categoria") or "Outro"),
+                str(m.get("categoria") or "Outros"),
                 str(m.get("quantidade") or 0),
                 str(m.get("tamanho") or ""),
                 str(m.get("unidade") or ""),
@@ -236,7 +236,7 @@ class ProdutoDialog(QDialog):
         self.ed_nome = QLineEdit()
         self.ed_marca = QLineEdit()
         self.cb_categoria = QComboBox()
-        self.cb_categoria.addItems(["Body Splash", "Condicionador", "Desodorante", "Máscara", "Perfume", "Sabonete", "Shampo", "Outro"])
+        self.cb_categoria.addItems(["Body Splash", "Condicionador", "Desodorante", "Máscara", "Perfume", "Sabonete", "Shampo", "Outros"])
 
         self.sp_tamanho = QDoubleSpinBox()
         self.sp_tamanho.setRange(0, 99999)
@@ -293,7 +293,7 @@ class ProdutoDialog(QDialog):
     def _fill(self, p: dict):
         self.ed_nome.setText(str(p.get("nome") or ""))
         self.ed_marca.setText(str(p.get("marca") or ""))
-        categoria = p.get("categoria") or "Outro"
+        categoria = p.get("categoria") or "Outros"
         idx = self.cb_categoria.findText(categoria)
         if idx >= 0: self.cb_categoria.setCurrentIndex(idx)
         self.sp_tamanho.setValue(float(p.get("tamanho") or 0))
@@ -556,7 +556,7 @@ class TelaProdutos(QWidget):
                 str(m.get("data") or ""), 
                 str(m.get("tipo") or ""), 
                 str(m.get("produto_nome") or ""),
-                str(m.get("categoria") or "Outro"),
+                str(m.get("categoria") or "Outros"),
                 str(m.get("quantidade") or 0), 
                 _format_tamanho(float(m.get("tamanho") or 0), "un"),
                 str(m.get("unidade") or ""), 
