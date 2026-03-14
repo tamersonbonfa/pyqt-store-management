@@ -34,11 +34,14 @@
 <details>
 <summary>📁 <strong>Estrutura do Projeto</strong></summary>
 
+```bash
 ├── 🗄️ database/    # Configurações e inicialização do SQLite (angelastore.db)
 ├── ⚙️ services/    # Lógica de negócio (Relatórios, Estoque, Vendas)
 ├── 🖼️ ui/          # Camada de visualização (Main, Relatórios, Login)
 ├── 🎨 assets/      # Ícones, logotipos e recursos visuais
 └── 🚀 main.py      # Ponto de entrada da aplicação
+
+```bash
 
 </details>
 
