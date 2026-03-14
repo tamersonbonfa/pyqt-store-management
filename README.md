@@ -10,6 +10,7 @@
 
 <details>
 <summary>🚀 <strong>Funcionalidades Principais</strong></summary>
+<br>
 
 | Recurso | Descrição |
 | :--- | :--- |
@@ -23,6 +24,7 @@
 
 <details>
 <summary>🛠️ <strong>Stack Tecnológica</strong></summary>
+<br>
 
 * **Core:** Python 3.x
 * **GUI:** PySide6 (Qt for Python) com widgets customizados
@@ -33,6 +35,7 @@
 
 <details>
 <summary>📁 <strong>Estrutura do Projeto</strong></summary>
+<br>
 
 ```bash
 ├── 🗄️ database/    # Configurações e inicialização do SQLite (angelastore.db)
@@ -47,6 +50,7 @@
 
 <details>
 <summary>⚙️ <strong>Configuração e Instalação</strong></summary>
+<br>
 
 1. Clonar o Repositório
 ```bash
