@@ -235,11 +235,16 @@ def registrar_ajuste_estoque(produto_id: int, nova_quantidade: int, observacao: 
 
 def listar_movimentacoes(produto_id: int | None = None, limite: int = 200) -> list[dict[str, Any]]:
     sql = """
-    SELECT m.id, m.data, m.tipo, m.produto_id, p.nome as produto_nome,
-           m.quantidade, m.observacao, m.usuario_id, m.usuario_nome, m.venda_id,
-           m.tamanho, m.unidade, m.valor_venda, m.desconto
-    FROM movimentacoes_estoque m
-    JOIN produtos p ON p.id = m.produto_id
+        SELECT 
+            m.*, 
+            p.nome as produto_nome, 
+            p.categoria,       -- << ADICIONE ESTA LINHA
+            p.tamanho, 
+            p.unidade,
+            u.nome as usuario_nome
+        FROM movimentacoes_estoque m
+        LEFT JOIN produtos p ON m.produto_id = p.id
+        LEFT JOIN usuarios u ON m.usuario_id = u.id
     """
     params = []
 

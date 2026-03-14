@@ -138,3 +138,7 @@ class TelaRelatorios(QWidget):
             if est['quantidade'] <= 0: item.setForeground(Qt.red)
             self.tab_estoque.setItem(i, 0, item)
             self.tab_estoque.setItem(i, 1, QTableWidgetItem(str(est['quantidade'])))
+        
+    def atualizar(self):
+    # Chama a função que você já tem, usando 'mes' como padrão
+        self.carregar_dados("mes")

@@ -14,18 +14,213 @@ from services.produtos_service import (
     registrar_ajuste_estoque,
     listar_movimentacoes,
 )
+import pandas as pd
+from datetime import datetime, timedelta
+from PySide6.QtWidgets import QFileDialog, QComboBox
 
-
+# --- FUNÇÕES UTILITÁRIAS ---
 def _money(v: float) -> str:
     try:
         return f"R$ {float(v):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
     except Exception:
         return "R$ 0,00"
 
-
 def _format_tamanho(v: float, unidade: str) -> str:
     return f"{int(v)}" if v.is_integer() else f"{v}"
 
+# --- DIALOGS ---
+class RelatorioMovimentacoesDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Relatório Geral de Movimentações")
+        self.resize(1200, 750)
+        self.dados_brutos = [] # Dados sem filtro para permitir busca rápida
+        self.dados_filtrados = [] # Dados após filtros aplicados
+        
+        layout = QVBoxLayout(self)
+        
+        # --- CABEÇALHO DE FILTROS ---
+        filtros_container = QVBoxLayout()
+        
+        # Linha 1: Título e Períodos
+        linha1 = QHBoxLayout()
+        self.lbl_info = QLabel("📋 Histórico de Movimentações")
+        self.lbl_info.setObjectName("Title")
+        
+        self.periodos_layout = QHBoxLayout()
+        self.btn_hoje = QPushButton("Hoje")
+        self.btn_semana = QPushButton("Semana")
+        self.btn_mes = QPushButton("Mês")
+        self.btn_ano = QPushButton("Ano")
+        self.btn_geral = QPushButton("Geral")
+        
+        for btn in [self.btn_hoje, self.btn_semana, self.btn_mes, self.btn_ano, self.btn_geral]:
+            self.periodos_layout.addWidget(btn)
+            
+        linha1.addWidget(self.lbl_info, 1)
+        linha1.addLayout(self.periodos_layout)
+        filtros_container.addLayout(linha1)
+
+        # Linha 2: Categorias e Usuário
+        linha2 = QHBoxLayout()
+        
+        self.cb_filtro_categoria = QComboBox()
+        self.cb_filtro_categoria.addItem("Todas as Categorias")
+        self.cb_filtro_categoria.addItems(["Body Splash", "Condicionador", "Desodorante", "Máscara", "Perfume", "Sabonete", "Shampo", "Outro"])
+        
+        self.cb_filtro_usuario = QComboBox()
+        self.cb_filtro_usuario.addItem("Todos os Usuários")
+        
+        linha2.addWidget(QLabel("Filtrar por:"))
+        linha2.addWidget(self.cb_filtro_categoria, 1)
+        linha2.addWidget(self.cb_filtro_usuario, 1)
+        linha2.addStretch(2)
+        filtros_container.addLayout(linha2)
+        
+        layout.addLayout(filtros_container)
+
+        # --- TABELA ---
+        self.tbl = QTableWidget(0, 12)
+        self.tbl.setHorizontalHeaderLabels([
+            "Data", "Tipo", "Produto", "Cat.", "Qtd", "Tam", "Un", "Obs", "Venda", "Usuário", "Valor", "Desc"
+        ])
+        self.tbl.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.tbl.setAlternatingRowColors(True)
+        layout.addWidget(self.tbl)
+
+        # --- RODAPÉ ---
+        footer = QHBoxLayout()
+        self.btn_excel = QPushButton("📗 Exportar para Excel")
+        self.btn_excel.setObjectName("Primary")
+        self.btn_fechar = QPushButton("Fechar")
+        
+        footer.addWidget(self.btn_excel)
+        footer.addStretch(1)
+        footer.addWidget(self.btn_fechar)
+        layout.addLayout(footer)
+
+        # --- EVENTOS ---
+        self.btn_fechar.clicked.connect(self.accept)
+        self.btn_excel.clicked.connect(self.exportar_excel)
+        
+        self.btn_hoje.clicked.connect(lambda: self.aplicar_filtros(periodo="hoje"))
+        self.btn_semana.clicked.connect(lambda: self.aplicar_filtros(periodo="semana"))
+        self.btn_mes.clicked.connect(lambda: self.aplicar_filtros(periodo="mes"))
+        self.btn_ano.clicked.connect(lambda: self.aplicar_filtros(periodo="ano"))
+        self.btn_geral.clicked.connect(lambda: self.aplicar_filtros(periodo="geral"))
+        
+        self.cb_filtro_categoria.currentTextChanged.connect(lambda: self.aplicar_filtros())
+        self.cb_filtro_usuario.currentTextChanged.connect(lambda: self.aplicar_filtros())
+
+        self.carregar_dados_iniciais()
+
+    def carregar_dados_iniciais(self):
+        """Carrega os dados do banco uma única vez para o cache"""
+        try:
+            from services.produtos_service import listar_movimentacoes
+            self.dados_brutos = listar_movimentacoes(limite=5000)
+            
+            # Preencher o Combo de Usuários dinamicamente com quem já fez movimentações
+            usuarios = sorted(list(set(str(d.get("usuario_nome") or "Sistema") for d in self.dados_brutos)))
+            self.cb_filtro_usuario.clear()
+            self.cb_filtro_usuario.addItem("Todos os Usuários")
+            self.cb_filtro_usuario.addItems(usuarios)
+            
+            self.aplicar_filtros("geral")
+        except Exception as e:
+            QMessageBox.critical(self, "Erro", f"Erro ao carregar dados: {e}")
+
+    def aplicar_filtros(self, periodo=None):
+        """Aplica múltiplos filtros simultaneamente (Data + Categoria + Usuário)"""
+        # Se não passar período, mantém o que está implícito ou busca do botão (padrão geral)
+        # Para simplificar, vamos usar uma variável de controle de período se necessário, 
+        # mas aqui aplicaremos os filtros de texto sempre.
+        
+        categoria_alvo = self.cb_filtro_categoria.currentText()
+        usuario_alvo = self.cb_filtro_usuario.currentText()
+        
+        agora = datetime.now()
+        self.dados_filtrados = []
+
+        for d in self.dados_brutos:
+            # 1. Filtro de Categoria (Note: sua listar_movimentacoes precisa retornar 'categoria' no dicionário)
+            cat_doc = d.get("categoria") or "Outro"
+            if categoria_alvo != "Todas as Categorias" and cat_doc != categoria_alvo:
+                continue
+                
+            # 2. Filtro de Usuário
+            user_doc = str(d.get("usuario_nome") or "Sistema")
+            if usuario_alvo != "Todos os Usuários" and user_doc != usuario_alvo:
+                continue
+            
+            # 3. Filtro de Período (Opcional, se 'periodo' for enviado)
+            if periodo:
+                try:
+                    dt = datetime.strptime(d["data"], "%Y-%m-%d %H:%M:%S")
+                    if periodo == "hoje" and dt.date() != agora.date(): continue
+                    if periodo == "semana" and dt < agora - timedelta(days=7): continue
+                    if periodo == "mes" and dt < agora - timedelta(days=30): continue
+                    if periodo == "ano" and dt < agora - timedelta(days=365): continue
+                except: pass
+
+            self.dados_filtrados.append(d)
+
+        self._renderizar_tabela(self.dados_filtrados)
+
+    def _renderizar_tabela(self, dados):
+        self.tbl.setRowCount(0)
+        for m in dados:
+            r = self.tbl.rowCount()
+            self.tbl.insertRow(r)
+            
+            tipo = str(m.get("tipo") or "").upper()
+            
+            # Adicionado m.get("categoria") na lista de itens
+            items = [
+                str(m.get("data") or ""),
+                tipo,
+                str(m.get("produto_nome") or ""),
+                str(m.get("categoria") or "Outro"),
+                str(m.get("quantidade") or 0),
+                str(m.get("tamanho") or ""),
+                str(m.get("unidade") or ""),
+                str(m.get("observacao") or ""),
+                str(m.get("venda_id") or ""),
+                str(m.get("usuario_nome") or ""),
+                _money(float(m.get("valor_venda") or 0)),
+                f"{float(m.get('desconto') or 0):.2f}%"
+            ]
+            
+            for c, texto in enumerate(items):
+                it = QTableWidgetItem(texto)
+                if c in (4, 8): it.setTextAlignment(Qt.AlignCenter) # Ajustado índices por causa da nova coluna
+                
+                if tipo == "SAIDA": it.setForeground(Qt.red)
+                elif tipo == "ENTRADA": it.setForeground(Qt.green)
+                elif tipo == "AJUSTE": it.setForeground(Qt.yellow)
+                
+                self.tbl.setItem(r, c, it)
+        self.tbl.resizeColumnsToContents()
+
+    def exportar_excel(self):
+        if not self.dados_filtrados:
+            QMessageBox.warning(self, "Aviso", "Não há dados para exportar.")
+            return
+
+        caminho, _ = QFileDialog.getSaveFileName(
+            self, "Salvar Excel", f"Relatorio_Estoque_{datetime.now().strftime('%Y%m%d')}.xlsx", "Excel Files (*.xlsx)"
+        )
+
+        if caminho:
+                    try:
+                        df = pd.DataFrame(self.dados_filtrados)
+                        # Incluindo categoria no Excel
+                        df = df[['data', 'tipo', 'produto_nome', 'categoria', 'quantidade', 'usuario_nome', 'valor_venda', 'observacao']]
+                        df.columns = ['Data', 'Tipo', 'Produto', 'Categoria', 'Qtd', 'Usuário', 'Valor', 'Observação']
+                        df.to_excel(caminho, index=False)
+                        QMessageBox.information(self, "Sucesso", "Relatório exportado!")
+                    except Exception as e:
+                        QMessageBox.critical(self, "Erro", f"Falha ao exportar: {e}")
 
 class ProdutoDialog(QDialog):
     def __init__(self, parent=None, produto: dict | None = None):
@@ -100,20 +295,17 @@ class ProdutoDialog(QDialog):
         self.ed_marca.setText(str(p.get("marca") or ""))
         categoria = p.get("categoria") or "Outro"
         idx = self.cb_categoria.findText(categoria)
-        if idx >= 0:
-            self.cb_categoria.setCurrentIndex(idx)
+        if idx >= 0: self.cb_categoria.setCurrentIndex(idx)
         self.sp_tamanho.setValue(float(p.get("tamanho") or 0))
         unidade = p.get("unidade") or "ml"
         idx = self.cb_unidade.findText(unidade)
-        if idx >= 0:
-            self.cb_unidade.setCurrentIndex(idx)
+        if idx >= 0: self.cb_unidade.setCurrentIndex(idx)
         self.sp_custo.setValue(float(p.get("custo") or 0))
         self.sp_preco.setValue(float(p.get("preco_venda") or 0))
         self.sp_qtd.setValue(int(p.get("quantidade") or 0))
         self.sp_min.setValue(int(p.get("estoque_minimo") or 0))
         self.ck_ativo.setChecked(int(p.get("ativo") or 0) == 1)
-        codigo = p.get("codigo_barras")
-        self.ed_codigo.setText("" if codigo is None else str(codigo))
+        self.ed_codigo.setText(str(p.get("codigo_barras") or ""))
 
     def get_data(self) -> dict:
         return {
@@ -129,7 +321,6 @@ class ProdutoDialog(QDialog):
             "codigo_barras": self.ed_codigo.text().strip(),
             "ativo": bool(self.ck_ativo.isChecked()),
         }
-
 
 class EstoqueDialog(QDialog):
     def __init__(self, parent=None, titulo="Movimentação", modo="ENTRADA"):
@@ -174,7 +365,7 @@ class EstoqueDialog(QDialog):
             "observacao": self.ed_obs.toPlainText().strip(),
         }
 
-
+# --- TELA PRINCIPAL ---
 class TelaProdutos(QWidget):
     def __init__(self, usuario_id: int):
         super().__init__()
@@ -186,38 +377,39 @@ class TelaProdutos(QWidget):
 
         # Cabeçalho
         header = QHBoxLayout()
-        title = QLabel("📦 Produtos / Controle de Estoque")
+        title = QLabel("📦 Produtos / Estoque")
         title.setObjectName("Title")
         self.ed_busca = QLineEdit()
-        self.ed_busca.setPlaceholderText("Buscar por nome, marca ou categoria...")
+        self.ed_busca.setPlaceholderText("Buscar...")
+        
+        self.btn_refresh = QPushButton("🔄 Atualizar")
+        self.btn_relatorio_mov = QPushButton("📊 Relatório Mov.") # Novo Botão
         self.btn_novo = QPushButton("➕ Novo Produto")
         self.btn_novo.setObjectName("Primary")
-        self.btn_refresh = QPushButton("🔄 Atualizar")
+
         header.addWidget(title, 1)
         header.addWidget(self.ed_busca, 1)
         header.addWidget(self.btn_refresh)
+        header.addWidget(self.btn_relatorio_mov)
         header.addWidget(self.btn_novo)
         layout.addLayout(header)
 
-        # Splitter para tabela e movimentações
         splitter = QSplitter(Qt.Vertical)
 
         # Tabela de produtos
         self.tbl = QTableWidget(0, 12)
         self.tbl.setHorizontalHeaderLabels([
             "ID", "Nome", "Marca", "Categoria", "Tamanho", "Unidade",
-            "Custo", "Preço", "Qtd", "Mínimo", "Status", "Código de barras"
+            "Custo", "Preço", "Qtd", "Mínimo", "Status", "Barras"
         ])
         self.tbl.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.tbl.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.tbl.setAlternatingRowColors(True)
 
-        # Botões de ações
         actions = QHBoxLayout()
         self.btn_editar = QPushButton("✏️ Editar")
-        self.btn_entrada = QPushButton("⬆️ Entrada Estoque")
-        self.btn_ajuste = QPushButton("🛠️ Ajustar Estoque")
-        self.btn_mov = QPushButton("📜 Ver Movimentações")
+        self.btn_entrada = QPushButton("⬆️ Entrada")
+        self.btn_ajuste = QPushButton("🛠️ Ajuste")
+        self.btn_mov = QPushButton("📜 Filtrar Histórico")
         actions.addWidget(self.btn_editar)
         actions.addWidget(self.btn_entrada)
         actions.addWidget(self.btn_ajuste)
@@ -230,18 +422,18 @@ class TelaProdutos(QWidget):
         top_l.addWidget(self.tbl)
         top_l.addLayout(actions)
 
-        # Tabela de movimentações
-        self.tbl_mov = QTableWidget(0, 11)
+        # Rodapé: Histórico Rápido
+        self.tbl_mov = QTableWidget(0, 12)
         self.tbl_mov.setHorizontalHeaderLabels([
-            "Data", "Tipo", "Produto", "Qtd", "Tamanho", "Unidade", "Obs", "Venda", "Usuário", "Valor", "Desconto"
+            "Data", "Tipo", "Produto", "Cat.", "Qtd", "Tam", "Un", "Obs", "Venda", "Usuário", "Valor", "Desc"
         ])
         self.tbl_mov.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.tbl_mov.setAlternatingRowColors(True)
 
         bottom = QWidget()
         bottom_l = QVBoxLayout(bottom)
         bottom_l.setContentsMargins(0, 0, 0, 0)
-        bottom_l.addWidget(QLabel("📜 Histórico de movimentações (últimas 200)"))
+        self.lbl_hist_titulo = QLabel("📜 Histórico Geral (últimas 200)")
+        bottom_l.addWidget(self.lbl_hist_titulo)
         bottom_l.addWidget(self.tbl_mov)
 
         splitter.addWidget(top)
@@ -249,25 +441,36 @@ class TelaProdutos(QWidget):
         splitter.setSizes([420, 220])
         layout.addWidget(splitter, 1)
 
-        # Eventos
+        # Conexões
         self.btn_novo.clicked.connect(self.novo_produto)
-        self.btn_refresh.clicked.connect(self.carregar)
+        self.btn_refresh.clicked.connect(self.atualizar)
+        self.btn_relatorio_mov.clicked.connect(self.abrir_relatorio_geral) # Conexão nova
         self.ed_busca.textChanged.connect(self.buscar)
         self.btn_editar.clicked.connect(self.editar)
         self.btn_entrada.clicked.connect(self.entrada)
         self.btn_ajuste.clicked.connect(self.ajuste)
-        self.btn_mov.clicked.connect(self.carregar_movimentacoes)
+        self.btn_mov.clicked.connect(self.ver_movimentacoes_selecionado)
         self.tbl.doubleClicked.connect(self.editar)
 
         self.carregar()
         self.carregar_movimentacoes()
 
+    def abrir_relatorio_geral(self):
+        """Abre a nova tela de relatório completo"""
+        dlg = RelatorioMovimentacoesDialog(self)
+        dlg.exec()
+
     def _selected_produto(self) -> dict | None:
         row = self.tbl.currentRow()
-        if row < 0:
-            return None
-        pid = int(self.tbl.item(row, 0).text())
+        if row < 0: return None
+        pid_item = self.tbl.item(row, 0)
+        if not pid_item: return None
+        pid = int(pid_item.text())
         return next((p for p in self.produtos_cache if int(p["id"]) == pid), None)
+
+    def atualizar(self):
+        self.carregar()
+        self.carregar_movimentacoes(None)
 
     def carregar(self):
         self.produtos_cache = listar_produtos(apenas_ativos=False)
@@ -287,121 +490,83 @@ class TelaProdutos(QWidget):
             minimo = int(p.get("estoque_minimo") or 0)
             ativo = int(p.get("ativo") or 0) == 1
             status = "ATIVO" if ativo else "INATIVO"
-            if ativo and minimo > 0 and qtd <= minimo:
-                status = "⚠️ ESTOQUE BAIXO"
+            if ativo and minimo > 0 and qtd <= minimo: status = "⚠️ BAIXO"
 
             values = [
-                str(p["id"]),
-                str(p.get("nome") or ""),
-                str(p.get("marca") or ""),
+                str(p["id"]), str(p.get("nome") or ""), str(p.get("marca") or ""),
                 str(p.get("categoria") or ""),
                 _format_tamanho(float(p.get("tamanho") or 0), p.get("unidade") or "ml"),
-                str(p.get("unidade") or ""),
-                _money(float(p.get("custo") or 0)),
-                _money(float(p.get("preco_venda") or 0)),
-                str(qtd),
-                str(minimo),
-                status,
-                str(p.get("codigo_barras") or "")
+                str(p.get("unidade") or ""), _money(float(p.get("custo") or 0)),
+                _money(float(p.get("preco_venda") or 0)), str(qtd), str(minimo),
+                status, str(p.get("codigo_barras") or "")
             ]
             for c, v in enumerate(values):
                 it = QTableWidgetItem(v)
-                if c in (0, 4, 7, 8, 9):
-                    it.setTextAlignment(Qt.AlignCenter)
+                if c in (0, 4, 7, 8, 9): it.setTextAlignment(Qt.AlignCenter)
                 self.tbl.setItem(r, c, it)
         self.tbl.resizeColumnsToContents()
 
     def novo_produto(self):
-        dlg = ProdutoDialog(self, produto=None)
-        if dlg.exec() != QDialog.Accepted:
-            return
-        d = dlg.get_data()
-        try:
-            criar_produto(**d)
-            self.carregar()
-            self.carregar_movimentacoes()
-        except Exception as e:
-            QMessageBox.critical(self, "Erro", str(e))
+        dlg = ProdutoDialog(self)
+        if dlg.exec() == QDialog.Accepted:
+            criar_produto(**dlg.get_data())
+            self.atualizar()
 
     def editar(self):
         p = self._selected_produto()
-        if not p:
-            QMessageBox.information(self, "Aviso", "Selecione um produto.")
-            return
+        if not p: return
         dlg = ProdutoDialog(self, produto=p)
-        if dlg.exec() != QDialog.Accepted:
-            return
-        d = dlg.get_data()
-        try:
-            atualizar_produto(produto_id=int(p["id"]), **d)
+        if dlg.exec() == QDialog.Accepted:
+            atualizar_produto(produto_id=int(p["id"]), **dlg.get_data())
             self.carregar()
-        except Exception as e:
-            QMessageBox.critical(self, "Erro", str(e))
 
     def entrada(self):
         p = self._selected_produto()
-        if not p:
-            QMessageBox.information(self, "Aviso", "Selecione um produto.")
-            return
-        dlg = EstoqueDialog(self, titulo="Entrada de estoque", modo="ENTRADA")
-        if dlg.exec() != QDialog.Accepted:
-            return
-        d = dlg.get_data()
-        try:
-            registrar_entrada_estoque(
-                produto_id=int(p["id"]),
-                quantidade=int(d["quantidade"]),
-                observacao=d["observacao"] or "Reposição",
-                usuario_id=self.usuario_id,
-            )
-            self.carregar()
-            self.carregar_movimentacoes()
-        except Exception as e:
-            QMessageBox.critical(self, "Erro", str(e))
+        if not p: return
+        dlg = EstoqueDialog(self, titulo="Entrada", modo="ENTRADA")
+        if dlg.exec() == QDialog.Accepted:
+            d = dlg.get_data()
+            registrar_entrada_estoque(int(p["id"]), int(d["quantidade"]), d["observacao"], self.usuario_id)
+            self.atualizar()
 
     def ajuste(self):
+        p = self._selected_produto()
+        if not p: return
+        dlg = EstoqueDialog(self, titulo="Ajuste", modo="AJUSTE")
+        if dlg.exec() == QDialog.Accepted:
+            d = dlg.get_data()
+            registrar_ajuste_estoque(int(p["id"]), int(d["nova_quantidade"]), d["observacao"], self.usuario_id)
+            self.atualizar()
+
+    def ver_movimentacoes_selecionado(self):
         p = self._selected_produto()
         if not p:
             QMessageBox.information(self, "Aviso", "Selecione um produto.")
             return
-        dlg = EstoqueDialog(self, titulo="Ajuste de estoque", modo="AJUSTE")
-        if dlg.exec() != QDialog.Accepted:
-            return
-        d = dlg.get_data()
-        try:
-            registrar_ajuste_estoque(
-                produto_id=int(p["id"]),
-                nova_quantidade=int(d["nova_quantidade"]),
-                observacao=d["observacao"] or "Ajuste manual",
-                usuario_id=self.usuario_id,
-            )
-            self.carregar()
-            self.carregar_movimentacoes()
-        except Exception as e:
-            QMessageBox.critical(self, "Erro", str(e))
+        self.carregar_movimentacoes(produto_id=int(p["id"]))
 
-    def carregar_movimentacoes(self):
-        movs = listar_movimentacoes(produto_id=None, limite=200)
+    def carregar_movimentacoes(self, produto_id: int | None = None):
+        movs = listar_movimentacoes(produto_id=produto_id, limite=200)
+        self.lbl_hist_titulo.setText(f"📜 Histórico: {self._selected_produto()['nome'] if produto_id else 'Geral'}")
         self.tbl_mov.setRowCount(0)
         for m in movs:
             r = self.tbl_mov.rowCount()
             self.tbl_mov.insertRow(r)
             values = [
-                str(m.get("data") or ""),
-                str(m.get("tipo") or ""),
+                str(m.get("data") or ""), 
+                str(m.get("tipo") or ""), 
                 str(m.get("produto_nome") or ""),
-                str(m.get("quantidade") or 0),
-                _format_tamanho(float(m.get("tamanho") or 0), m.get("unidade") or "un"),
-                str(m.get("unidade") or ""),
-                str(m.get("observacao") or ""),
+                str(m.get("categoria") or "Outro"),
+                str(m.get("quantidade") or 0), 
+                _format_tamanho(float(m.get("tamanho") or 0), "un"),
+                str(m.get("unidade") or ""), 
+                str(m.get("observacao") or ""), 
                 str(m.get("venda_id") or ""),
-                str(m.get("usuario_nome") or ""),
+                str(m.get("usuario_nome") or ""), 
                 _money(float(m.get("valor_venda") or 0)),
                 f"{float(m.get('desconto') or 0):.2f}%"
             ]
             for c, v in enumerate(values):
                 it = QTableWidgetItem(v)
-                if c in (1, 3, 4, 5, 7, 9, 10):
-                    it.setTextAlignment(Qt.AlignCenter)
                 self.tbl_mov.setItem(r, c, it)
         self.tbl_mov.resizeColumnsToContents()

@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Any
-from database.db import get_connection
+from database.db import get_connection # Ou use o seu db_manager
 
 class RelatoriosService:
     @staticmethod
@@ -25,7 +25,7 @@ class RelatoriosService:
                 GROUP BY forma_pagamento
             """, (inicio, fim)).fetchall()
 
-            # 3. Ranking de Produtos Detalhado (Com Qtd, Descontos e Lucro)
+            # 3. Ranking de Produtos Detalhado
             produtos = conn.execute("""
                 SELECT 
                     p.nome, 
@@ -59,3 +59,33 @@ class RelatoriosService:
                 "produtos": [dict(r) for r in produtos],
                 "estoque_baixo": [dict(r) for r in estoque_baixo]
             }
+    
+    @staticmethod
+    def obter_relatorio_movimentacoes() -> list[dict]:
+            """
+            Retorna os dados usando a função que já funciona na sua interface principal.
+            Isso garante que usaremos a tabela correta.
+            """
+            try:
+                # Importamos a função que você já usa para preencher o "Histórico: Geral"
+                from services.produtos_service import listar_movimentacoes
+                
+                # Chamamos ela pedindo um limite maior para o relatório
+                dados = listar_movimentacoes(limite=2000)
+                
+                # Como a sua tabela de relatório pede nomes de colunas específicos, 
+                # garantimos a compatibilidade aqui:
+                formatados = []
+                for d in dados:
+                    formatados.append({
+                        "data": d.get("data"),
+                        "tipo": d.get("tipo"),
+                        "produto": d.get("produto_nome"), # Pegando o nome do produto que já vem do JOIN
+                        "quantidade": d.get("quantidade"),
+                        "observacao": d.get("observacao"),
+                        "usuario": d.get("usuario_nome")  # Pegando o nome do usuário
+                    })
+                return formatados
+            except Exception as e:
+                print(f"Erro ao carregar dados do service existente: {e}")
+                return []
