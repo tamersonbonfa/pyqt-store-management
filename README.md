@@ -105,6 +105,9 @@ Simulação Realista: Gera movimentações de estoque e vendas fictícias.
 Validação: Ideal para validar o comportamento dos gráficos e relatórios gerenciais.
 
 </details>
+<br>
+<br>
+<br>
 
 <p align="center">
 Desenvolvido por <strong>Tamerson Bonfa</strong>
