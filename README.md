@@ -1,59 +1,79 @@
-🛍️ Desktop Management System
-Sistema de Gestão Comercial Desktop de alta performance desenvolvido em Python. Uma solução robusta com arquitetura modular, suporte a temas e persistência de dados segura, ideal para automação comercial de pequeno e médio porte.
+# 🛍️ Desktop Management System
 
-🚀 Funcionalidades Principais
-Gestão de Inventário: Cadastro detalhado de produtos com controle de tamanho, unidade e estoque mínimo.
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.x-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/PySide-6-41CD52?style=for-the-badge&logo=qt&logoColor=white" alt="PySide6">
+  <img src="https://img.shields.io/badge/SQLite-3-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite">
+  <img src="https://img.shields.io/badge/UI-Dark_Premium-222222?style=for-the-badge" alt="UI Dark">
+</p>
 
-PDV (Ponto de Venda): Fluxo de caixa otimizado com suporte a múltiplas formas de pagamento (PIX, Cartão, Dinheiro).
+Sistema de Gestão Comercial Desktop de alta performance desenvolvido em **Python**. Uma solução robusta com arquitetura modular, suporte a temas e persistência de dados segura, ideal para automação comercial de pequeno e médio porte.
 
-Dashboard Gerencial: Relatórios em tempo real com métricas de faturamento, ticket médio e lucro estimado.
+---
 
-Histórico de Movimentação: Rastreabilidade total de entradas e saídas de estoque com logs de usuário.
+## 🚀 Funcionalidades Principais
 
-Interface Dark Premium: UI moderna desenvolvida em PySide6 com foco em usabilidade e redução de fadiga visual.
+| Recurso | Descrição |
+| :--- | :--- |
+| **📦 Gestão de Inventário** | Cadastro completo de produtos com controle de tamanho, unidade e estoque mínimo. |
+| **💳 PDV Otimizado** | Fluxo de caixa ágil com suporte a múltiplas formas de pagamento: PIX, Cartão e Dinheiro. |
+| **📊 Dashboard Gerencial** | Relatórios em tempo real com métricas de faturamento, ticket médio e lucro estimado. |
+| **📑 Histórico Total** | Rastreabilidade completa de entradas e saídas de estoque com logs detalhados de usuário. |
+| **🎨 Interface Premium** | UI moderna em **PySide6** com tema Dark, focada em usabilidade e redução de fadiga visual. |
 
-🛠️ Stack Tecnológica
-Core: Python 3.x
+---
 
-GUI: PySide6 (Qt for Python) com widgets customizados
+## 🛠️ Stack Tecnológica
 
-Database: SQLite com suporte a transações ACID
+* **Core:** Python 3.x
+* **GUI:** PySide6 (Qt for Python) com widgets customizados
+* **Database:** SQLite com suporte a transações ACID
+* **Arquitetura:** Separação modular entre `services/` (lógica) e `ui/` (interface)
 
-Serviços: Arquitetura separada em services/ para lógica de negócio e ui/ para interface
+---
 
-📁 Estrutura do Projeto
-Plaintext
+## 📁 Estrutura do Projeto
 
-├── database/        # Configurações e inicialização do SQLite (angelastore.db)
-├── services/        # Lógica de negócio (Relatórios, Estoque, Vendas)
-├── ui/              # Telas (Main, Relatórios, Produtos, Login)
-├── assets/          # Ícones e recursos visuais
-└── main.py          # Ponto de entrada da aplicação
+```bash
+├── 🗄️ database/    # Configurações e inicialização do SQLite (angelastore.db)
+├── ⚙️ services/    # Lógica de negócio (Relatórios, Estoque, Vendas)
+├── 🖼️ ui/          # Camada de visualização (Main, Relatórios, Login)
+├── 🎨 assets/      # Ícones, logotipos e recursos visuais
+└── 🚀 main.py      # Ponto de entrada da aplicação
 
-⚙️ Configuração e Instalação
-Clone o repositório:
-
+# ⚙️ Configuração e Instalação
+1. Clonar o Repositório
 Bash
 
-git clone https://github.com/tamersonbonfa/pyqt-store-management.git
-Ambiente Virtual:
+git clone [https://github.com/tamersonbonfa/pyqt-store-management.git](https://github.com/tamersonbonfa/pyqt-store-management.git)
+cd pyqt-store-management
 
+2. Configurar Ambiente Virtual
 Bash
 
 python -m venv .venv
-source .venv/bin/activate  # Linux/Mac
-.venv\Scripts\activate     # Windows
-Dependências:
 
+# Ativação Windows:
+.venv\Scripts\activate
+
+# Ativação Linux/Mac:
+source .venv/bin/activate
+3. Instalar Dependências
 Bash
 
 pip install -r requirements.txt
-Banco de Dados:
-O sistema inicializa automaticamente o arquivo angelastore.db ao ser executado pela primeira vez, criando todas as tabelas e índices necessários.
+
+💡 Nota: O sistema inicializa automaticamente o arquivo database.db na primeira execução, criando todas as tabelas e índices necessários.
+
 
 🧪 Ferramentas de Desenvolvimento
-O projeto inclui um script utilitário para testes de estresse e preenchimento de banco de dados:
+O projeto inclui o script utilitário injetor_dados.py para testes de estresse:
 
-injetor_dados.py: Gera movimentações de estoque e vendas fictícias para validar os gráficos e relatórios gerenciais.
+Simulação Realista: Gera movimentações de estoque e vendas fictícias para validar métricas.
 
-Desenvolvido por Tamerson Bonfa
+Validação: Ideal para testar o comportamento dos gráficos e relatórios gerenciais.
+
+<p align="center">
+Desenvolvido por <strong>Tamerson Bonfa</strong>
+</p>
+
