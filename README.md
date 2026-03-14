@@ -41,39 +41,7 @@ Sistema de Gestão Comercial Desktop de alta performance desenvolvido em **Pytho
 ├── 🎨 assets/      # Ícones, logotipos e recursos visuais
 └── 🚀 main.py      # Ponto de entrada da aplicação
 
-# ⚙️ Configuração e Instalação
-1. Clonar o Repositório
-Bash
+</details>
 
-git clone [https://github.com/tamersonbonfa/pyqt-store-management.git](https://github.com/tamersonbonfa/pyqt-store-management.git)
-cd pyqt-store-management
-
-2. Configurar Ambiente Virtual
-Bash
-
-python -m venv .venv
-
-# Ativação Windows:
-.venv\Scripts\activate
-
-# Ativação Linux/Mac:
-source .venv/bin/activate
-3. Instalar Dependências
-Bash
-
-pip install -r requirements.txt
-
-💡 Nota: O sistema inicializa automaticamente o arquivo database.db na primeira execução, criando todas as tabelas e índices necessários.
-
-
-🧪 Ferramentas de Desenvolvimento
-O projeto inclui o script utilitário injetor_dados.py para testes de estresse:
-
-Simulação Realista: Gera movimentações de estoque e vendas fictícias para validar métricas.
-
-Validação: Ideal para testar o comportamento dos gráficos e relatórios gerenciais.
-
-<p align="center">
-Desenvolvido por <strong>Tamerson Bonfa</strong>
-</p>
-
+<details>
+<summary>⚙️ <strong>Configuração e Instalação</strong></summary>
