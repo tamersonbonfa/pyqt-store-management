@@ -1,31 +1,59 @@
-# pyqt-store-management
-Sistema de Gestão Comercial Desktop desenvolvido em Python e PyQt. Arquitetura modular, suporte a temas e banco de dados SQLite. Pronto para personalização e rebranding.
+🛍️ Desktop Management System
+Sistema de Gestão Comercial Desktop de alta performance desenvolvido em Python. Uma solução robusta com arquitetura modular, suporte a temas e persistência de dados segura, ideal para automação comercial de pequeno e médio porte.
 
-# Desktop Store Management System (Template)
+🚀 Funcionalidades Principais
+Gestão de Inventário: Cadastro detalhado de produtos com controle de tamanho, unidade e estoque mínimo.
 
-Este é um projeto de código aberto de um sistema de gestão comercial desktop, desenvolvido com foco em modularidade e facilidade de personalização. O sistema foi projetado para ser uma solução "White Label", permitindo que você altere o nome, logotipos e cores para atender a qualquer tipo de comércio.
+PDV (Ponto de Venda): Fluxo de caixa otimizado com suporte a múltiplas formas de pagamento (PIX, Cartão, Dinheiro).
 
-## 🚀 Funcionalidades Principal
-* **Gestão de Clientes e Produtos:** Cadastro completo com persistência em SQLite.
-* **Sistema de Vendas:** Fluxo de caixa com registro de itens e geração de recibos.
-* **Interface Moderna:** Desenvolvida em PyQt/PySide com suporte a temas customizáveis.
-* **Relatórios:** Geração de relatórios de vendas e serviços.
-* **Segurança:** Sistema de autenticação e diferentes níveis de acesso.
+Dashboard Gerencial: Relatórios em tempo real com métricas de faturamento, ticket médio e lucro estimado.
 
-## 🛠️ Tecnologias Utilizadas
-* **Linguagem:** Python 3.x
-* **Interface Gráfica:** PyQt / PySide
-* **Banco de Dados:** SQLite (com scripts de inicialização automática)
-* **Relatórios:** ReportLab / PDF Service
+Histórico de Movimentação: Rastreabilidade total de entradas e saídas de estoque com logs de usuário.
 
-## ⚙️ Como Personalizar
-Para adaptar este projeto para o seu próprio negócio (ex: "Minha Loja", "Angela Store", etc.):
-1. Altere o nome e identidade visual no arquivo `ui/themes.py`.
-2. Configure o título da janela principal em `ui/main_window.py`.
-3. Substitua os ícones na pasta `assets/`.
+Interface Dark Premium: UI moderna desenvolvida em PySide6 com foco em usabilidade e redução de fadiga visual.
 
-## 📦 Instalação
-1. Clone o repositório.
-2. Crie um ambiente virtual: `python -m venv .venv`
-3. Instale as dependências: `pip install -r requirements.txt`
-4. Execute o arquivo principal: `python main.py`
+🛠️ Stack Tecnológica
+Core: Python 3.x
+
+GUI: PySide6 (Qt for Python) com widgets customizados
+
+Database: SQLite com suporte a transações ACID
+
+Serviços: Arquitetura separada em services/ para lógica de negócio e ui/ para interface
+
+📁 Estrutura do Projeto
+Plaintext
+
+├── database/        # Configurações e inicialização do SQLite (angelastore.db)
+├── services/        # Lógica de negócio (Relatórios, Estoque, Vendas)
+├── ui/              # Telas (Main, Relatórios, Produtos, Login)
+├── assets/          # Ícones e recursos visuais
+└── main.py          # Ponto de entrada da aplicação
+
+⚙️ Configuração e Instalação
+Clone o repositório:
+
+Bash
+
+git clone https://github.com/tamersonbonfa/pyqt-store-management.git
+Ambiente Virtual:
+
+Bash
+
+python -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+.venv\Scripts\activate     # Windows
+Dependências:
+
+Bash
+
+pip install -r requirements.txt
+Banco de Dados:
+O sistema inicializa automaticamente o arquivo angelastore.db ao ser executado pela primeira vez, criando todas as tabelas e índices necessários.
+
+🧪 Ferramentas de Desenvolvimento
+O projeto inclui um script utilitário para testes de estresse e preenchimento de banco de dados:
+
+injetor_dados.py: Gera movimentações de estoque e vendas fictícias para validar os gráficos e relatórios gerenciais.
+
+Desenvolvido por Tamerson Bonfa
