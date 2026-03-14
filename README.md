@@ -1,4 +1,4 @@
-# 🛍️ Angela Store | Desktop Management System
+# 🛍️ Desktop Management System
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.x-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
@@ -34,7 +34,6 @@
 <details>
 <summary>📁 <strong>Estrutura do Projeto</strong></summary>
 
-```bash
 ├── 🗄️ database/    # Configurações e inicialização do SQLite (angelastore.db)
 ├── ⚙️ services/    # Lógica de negócio (Relatórios, Estoque, Vendas)
 ├── 🖼️ ui/          # Camada de visualização (Main, Relatórios, Login)
