@@ -19,6 +19,9 @@
 | **📊 Dashboard Gerencial** | Relatórios em tempo real com métricas de faturamento, ticket médio e lucro estimado. |
 | **📑 Histórico Total** | Rastreabilidade completa de entradas e saídas de estoque com logs detalhados de usuário. |
 | **🎨 Interface Premium** | UI moderna em **PySide6** com tema Dark, focada em usabilidade e redução de fadiga visual. |
+<br>
+<br>
+<br>
 
 </details>
 
@@ -30,6 +33,9 @@
 * **GUI:** PySide6 (Qt for Python) com widgets customizados
 * **Database:** SQLite com suporte a transações ACID
 * **Arquitetura:** Separação modular entre `services/` e `ui/`
+<br>
+<br>
+<br>
 
 </details>
 
@@ -45,6 +51,9 @@
 └── 🚀 main.py      # Ponto de entrada da aplicação
 
 ```
+<br>
+<br>
+<br>
 
 </details>
 
@@ -92,6 +101,9 @@ pip install -r requirements.txt
 ```
 
 💡 Nota: O sistema inicializa automaticamente o arquivo angelastore.db na primeira execução.
+<br>
+<br>
+<br>
 
 </details>
 
@@ -103,6 +115,9 @@ O projeto inclui o script utilitário injetor_dados.py para testes de estresse:
 Simulação Realista: Gera movimentações de estoque e vendas fictícias.
 
 Validação: Ideal para validar o comportamento dos gráficos e relatórios gerenciais.
+<br>
+<br>
+<br>
 
 </details>
 <br>
