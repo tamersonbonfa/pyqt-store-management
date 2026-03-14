@@ -50,8 +50,14 @@
 
 1. Clonar o Repositório
 ```bash
+
 git clone [https://github.com/tamersonbonfa/pyqt-store-management.git](https://github.com/tamersonbonfa/pyqt-store-management.git)
+
+```
+```bash
+
 cd pyqt-store-management
+
 ```
 
 2. Configurar Ambiente Virtual
@@ -61,14 +67,26 @@ python -m venv .venv
 
 ```
 # Ativação Windows:
+```bash
+
 .venv\Scripts\activate
 
+```
+
 # Ativação Linux/Mac:
+```bash
+
 source .venv/bin/activate
+
+```
+
 3. Instalar Dependências
-Bash
+```bash
 
 pip install -r requirements.txt
+
+```
+
 💡 Nota: O sistema inicializa automaticamente o arquivo angelastore.db na primeira execução.
 
 </details>
