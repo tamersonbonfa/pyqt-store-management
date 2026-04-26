@@ -14,6 +14,11 @@ from services.produtos_service import (
     registrar_ajuste_estoque,
     listar_movimentacoes,
 )
+
+from config import (
+    CATEGORIAS_PRODUTOS, # IMPORTAR A LISTA DE CATEGORIAS DO CONFIG.PY
+    UNIDADE_PRODUTOS
+)
 import pandas as pd
 from datetime import datetime, timedelta
 from PySide6.QtWidgets import QFileDialog, QComboBox
@@ -66,7 +71,7 @@ class RelatorioMovimentacoesDialog(QDialog):
         
         self.cb_filtro_categoria = QComboBox()
         self.cb_filtro_categoria.addItem("Todas as Categorias")
-        self.cb_filtro_categoria.addItems(["Body Splash", "Condicionador", "Desodorante", "Máscara", "Perfume", "Sabonete", "Shampo", "Outros"])
+        self.cb_filtro_categoria.addItems(CATEGORIAS_PRODUTOS)
         
         self.cb_filtro_usuario = QComboBox()
         self.cb_filtro_usuario.addItem("Todos os Usuários")
@@ -236,14 +241,14 @@ class ProdutoDialog(QDialog):
         self.ed_nome = QLineEdit()
         self.ed_marca = QLineEdit()
         self.cb_categoria = QComboBox()
-        self.cb_categoria.addItems(["Body Splash", "Condicionador", "Desodorante", "Máscara", "Perfume", "Sabonete", "Shampo", "Outros"])
+        self.cb_categoria.addItems(CATEGORIAS_PRODUTOS)
 
         self.sp_tamanho = QDoubleSpinBox()
         self.sp_tamanho.setRange(0, 99999)
         self.sp_tamanho.setDecimals(2)
         self.sp_tamanho.setValue(100)
         self.cb_unidade = QComboBox()
-        self.cb_unidade.addItems(["ml", "g", "un"])
+        self.cb_unidade.addItems(UNIDADE_PRODUTOS)
 
         self.sp_custo = QDoubleSpinBox()
         self.sp_custo.setRange(0, 999999)
