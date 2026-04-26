@@ -29,7 +29,7 @@
 <summary>🛠️ <strong>Stack Tecnológica</strong></summary>
 <br>
 
-* **Core:** Python 3.x
+* **Core:** Python (3.10, 3.11, 3.12)
 * **GUI:** PySide6 (Qt for Python) com widgets customizados
 * **Database:** SQLite com suporte a transações ACID
 * **Arquitetura:** Separação modular entre `services/` e `ui/`
