@@ -1,10 +1,15 @@
 from __future__ import annotations
 
-import hashlib
+import bcrypt
 from dataclasses import dataclass
 from datetime import datetime
 
 from database.db import get_connection
+
+from config import (
+    ADMIN_PWD # IMPORTAR A SENHA DE ADMIN DO CONFIG.PY
+
+)
 
 
 def _now_iso() -> str:
@@ -12,9 +17,18 @@ def _now_iso() -> str:
 
 
 def hash_password(password: str) -> str:
-    # Simples e funcional (local). Se quiser, depois migramos para bcrypt.
-    return hashlib.sha256(password.encode("utf-8")).hexdigest()
+    # Gera o salt e o hash. O 'cost' padrão é 12.
+    # O retorno já inclui o salt necessário para a verificação futura.
+    pwd_bytes = password.encode("utf-8")
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(pwd_bytes, salt).decode("utf-8")
 
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    # O bcrypt extrai o salt automaticamente do hash armazenado
+    return bcrypt.checkpw(
+        plain_password.encode("utf-8"), 
+        hashed_password.encode("utf-8")
+    )
 
 @dataclass
 class Usuario:
@@ -45,7 +59,7 @@ def ensure_admin_user():
             INSERT INTO usuarios (username, senha_hash, nome, ativo, is_admin, criado_em)
             VALUES (?, ?, ?, 1, 1, ?)
             """,
-            ("admin", hash_password("admin"), "Administrador", _now_iso()),
+            ("admin", hash_password(ADMIN_PWD), "Administrador", _now_iso()),
         )
         conn.commit()
 
@@ -72,7 +86,7 @@ def authenticate(username: str, password: str) -> Usuario | None:
         if int(row["ativo"]) != 1:
             return None
 
-        if row["senha_hash"] != hash_password(password):
+        if not verify_password(password, row["senha_hash"]):
             return None
 
         return Usuario(
