@@ -9,7 +9,6 @@ ENV/
 
 ### Base de Dados e Configurações ###
 # Ignora a pasta database para não subir dados sensíveis ou locais
-database/
 *.db
 *.sqlite
 *.sqlite3
