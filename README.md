@@ -44,7 +44,7 @@
 <br>
 
 ```bash
-├── 🗄️ database/    # Configurações e inicialização do SQLite (angelastore.db)
+├── 🗄️ database/    # Configurações e inicialização do SQLite (database.db)
 ├── ⚙️ services/    # Lógica de negócio (Relatórios, Estoque, Vendas)
 ├── 🖼️ ui/          # Camada de visualização (Main, Relatórios, Login)
 ├── 🎨 assets/      # Ícones, logotipos e recursos visuais
@@ -64,7 +64,7 @@
 1. Clonar o Repositório
 ```bash
 
-git clone [https://github.com/tamersonbonfa/pyqt-store-management.git](https://github.com/tamersonbonfa/pyqt-store-management.git)
+git clone https://github.com/tamersonbonfa/pyqt-store-management.git pyqt-store-management
 
 ```
 ```bash
@@ -73,34 +73,43 @@ cd pyqt-store-management
 
 ```
 
-2. Configurar Ambiente Virtual
+2. Baixar e instalar Miniconda pelo link:
 ```bash
 
-python -m venv .venv
+https://www.anaconda.com/download/success
 
 ```
-# Ativação Windows:
+3. Configurar ambiente virtual no miniconda:
+
+# Criando ambiente virtual pelo conda:
 ```bash
 
-.venv\Scripts\activate
-
-```
-
-# Ativação Linux/Mac:
-```bash
-
-source .venv/bin/activate
+conda create -n pyqt-store-management python=3.12
 
 ```
 
-3. Instalar Dependências
+# Ativação ambiente pelo conda:
+```bash
+
+conda activate pyqt-store-management
+
+```
+
+3. Instalar Dependências:
 ```bash
 
 pip install -r requirements.txt
 
 ```
 
-💡 Nota: O sistema inicializa automaticamente o arquivo angelastore.db na primeira execução.
+4. Iniciar sistema:
+```bash
+
+python main.py
+
+```
+
+💡 Nota: O sistema inicializa automaticamente o arquivo database/database.db na primeira execução.
 <br>
 <br>
 <br>
@@ -110,7 +119,7 @@ pip install -r requirements.txt
 <details>
 <summary>🧪 <strong>Ferramentas de Desenvolvimento</strong></summary>
 <br>
-O projeto inclui o script utilitário injetor_dados.py para testes de estresse:
+O projeto inclui o script utilitário injetor.py para testes de estresse:
 
 Simulação Realista: Gera movimentações de estoque e vendas fictícias.
 
